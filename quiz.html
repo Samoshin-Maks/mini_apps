@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Квизы по аниме</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px 20px;
+      background: black;
+      color: white;
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: white;
+      color: black;
+    }
+    #back-btn {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="back-btn">← Назад</button>
+  <div id="content"></div>
+
+  <script>
+    const backBtn = document.getElementById("back-btn");
+    const content = document.getElementById("content");
+
+    backBtn.onclick = () => {
+      window.location.href = "main.html";
+    };
+
+    const quizzes = {
+      "My Hero Academia": [
+        { question: "Кто главный герой?", options: ["Изуку", "Бакуго", "Тодороки", "Камина"], correct: 0 },
+        { question: "Сила Тодороки?", options: ["Огонь и лед", "Вода", "Ветер", "Земля"], correct: 0 },
+        // Добавь остальные вопросы по желанию...
+      ],
+      "Naruto": [
+        { question: "Главный герой?", options: ["Наруто", "Саске", "Сакура", "Какаши"], correct: 0 },
+        // Добавь остальные вопросы...
+      ],
+      // Добавь еще 3 аниме с вопросами
+    };
+
+    let currentQuiz = null;
+    let currentQuestionIndex = 0;
+    let correctAnswersCount = 0;
+    let quizScores = {};
+
+    async function loadScores() {
+      if (window.Telegram?.WebApp?.DataStorage) {
+        try {
+          const data = await window.Telegram.WebApp.DataStorage.getItem('animeQuizScores');
+          return data ? JSON.parse(data) : {};
+        } catch (e) {
+          console.error("Ошибка загрузки из DataStorage:", e);
+          return {};
+        }
+      } else {
+        const data = localStorage.getItem('animeQuizScores');
+        return data ? JSON.parse(data) : {};
+      }
+    }
+
+    async function saveScores() {
+      if (window.Telegram?.WebApp?.DataStorage) {
+        try {
+          await window.Telegram.WebApp.DataStorage.setItem('animeQuizScores', JSON.stringify(quizScores));
+        } catch (e) {
+          console.error("Ошибка сохранения в DataStorage:", e);
+        }
+      } else {
+        localStorage.setItem('animeQuizScores', JSON.stringify(quizScores));
+      }
+    }
+
+    function showQuizList() {
+      content.innerHTML = "<h2>Выбери квиз по аниме:</h2>";
+      for (const anime in quizzes) {
+        const btn = document.createElement("button");
+        btn.textContent = anime;
+        btn.onclick = () => startQuiz(anime);
+        content.appendChild(btn);
+      }
+    }
+
+    function startQuiz(anime) {
+      currentQuiz = anime;
+      currentQuestionIndex = 0;
+      correctAnswersCount = 0;
+      showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+      const quiz = quizzes[currentQuiz];
+      const q = quiz[currentQuestionIndex];
+      content.innerHTML = `<h2>${q.question}</h2>`;
+      q.options.forEach((option, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => {
+          if (i === q.correct) correctAnswersCount++;
+          currentQuestionIndex++;
+          if (currentQuestionIndex < quiz.length) {
+            showQuizQuestion();
+          } else {
+            finishQuiz();
+          }
+        };
+        content.appendChild(btn);
+      });
+    }
+
+    async function finishQuiz() {
+      quizScores[currentQuiz] = (quizScores[currentQuiz] || 0) + correctAnswersCount;
+      await saveScores();
+
+      content.innerHTML = `
+        <h2>Квиз завершён!</h2>
+        <p>Правильных ответов: ${correctAnswersCount} из ${quizzes[currentQuiz].length}</p>
+        <button id="btn-back">Вернуться к выбору квизов</button>
+      `;
+      document.getElementById("btn-back").onclick = () => {
+        showQuizList();
+      };
+    }
+
+    (async () => {
+      quizScores = await loadScores();
+      showQuizList();
+    })();
+  </script>
+
+</body>
+</html>

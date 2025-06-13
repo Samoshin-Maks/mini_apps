@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Кто ты из аниме?</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px 20px;
+      background: black;
+      color: white;
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: white;
+      color: black;
+    }
+    #back-btn {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="back-btn">← Назад</button>
+  <div id="content"></div>
+
+  <script>
+    const backBtn = document.getElementById("back-btn");
+    const content = document.getElementById("content");
+
+    backBtn.onclick = () => {
+      window.location.href = "main.html";
+    };
+
+    const questions = [
+      {
+        question: "Ты предпочитаешь...",
+        options: [
+          "Быть лидером",
+          "Поддерживать друзей",
+          "Учиться новому",
+          "Сражаться за правду"
+        ],
+      },
+      {
+        question: "Какое твоё главное качество?",
+        options: [
+          "Смелость",
+          "Доброта",
+          "Ум",
+          "Настойчивость"
+        ],
+      },
+      // Добавляй еще вопросы
+    ];
+
+    const characters = [
+      "Наруто",
+      "Саске",
+      "Сакура",
+      "Какаши"
+    ];
+
+    let currentQuestionIndex = 0;
+    let scores = [0, 0, 0, 0];
+    const totalQuestions = questions.length;
+
+    function showQuestion() {
+      const q = questions[currentQuestionIndex];
+      content.innerHTML = `<h2>${q.question}</h2>`;
+      q.options.forEach((option, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => {
+          scores[i]++;
+          currentQuestionIndex++;
+          if (currentQuestionIndex < totalQuestions) {
+            showQuestion();
+          } else {
+            showResult();
+          }
+        };
+        content.appendChild(btn);
+      });
+    }
+
+    function showResult() {
+      const maxScore = Math.max(...scores);
+      const maxIndex = scores.indexOf(maxScore);
+      const character = characters[maxIndex];
+
+      content.innerHTML = `
+        <h2>Ты — ${character}!</h2>
+        <p>Спасибо за прохождение теста.</p>
+        <button id="btn-back">Вернуться на главную</button>
+      `;
+
+      document.getElementById("btn-back").onclick = () => {
+        window.location.href = "main.html";
+      };
+    }
+
+    showQuestion();
+  </script>
+
+</body>
+</html>
