@@ -9,105 +9,109 @@
       color: white;
       font-family: Arial, sans-serif;
       padding: 20px;
+      text-align: center;
+    }
+    h2 {
+      color: #ffcc00;
     }
     button {
       display: block;
-      margin: 10px 0;
+      margin: 10px auto;
       padding: 10px 20px;
-      background: black;
+      background: #1e1e1e;
       color: white;
       border: 2px solid white;
       cursor: pointer;
       font-size: 16px;
+      border-radius: 8px;
     }
     button:hover {
       background: white;
       color: black;
     }
-    #back-btn {
-      margin-bottom: 20px;
+    img {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
-  <button id="back-btn">← Назад</button>
-  <div id="content"></div>
+  <div id="greeting"></div>
+  <div id="quiz-container"></div>
 
   <script>
-    const backBtn = document.getElementById("back-btn");
-    const content = document.getElementById("content");
+    if (window.Telegram?.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+      const user = Telegram.WebApp.initDataUnsafe.user;
+      if (user) {
+        document.getElementById("greeting").innerHTML = `<h2>Привет, ${user.first_name}!</h2>`;
+      }
+    }
 
-    backBtn.onclick = () => {
-      window.location.href = "main.html";
-    };
+    const quizContainer = document.getElementById("quiz-container");
 
     const questions = [
       {
         question: "Ты предпочитаешь...",
         options: [
-          "Быть лидером",
-          "Поддерживать друзей",
-          "Учиться новому",
-          "Сражаться за правду"
-        ],
+          { text: "Быть лидером", character: "Наруто" },
+          { text: "Поддерживать друзей", character: "Сакура" },
+          { text: "Учиться новому", character: "Какаши" },
+          { text: "Сражаться за правду", character: "Саске" }
+        ]
       },
       {
-        question: "Какое твоё главное качество?",
+        question: "Твоя сильная сторона?",
         options: [
-          "Смелость",
-          "Доброта",
-          "Ум",
-          "Настойчивость"
-        ],
+          { text: "Выносливость", character: "Наруто" },
+          { text: "Чувствительность", character: "Сакура" },
+          { text: "Ум", character: "Какаши" },
+          { text: "Решимость", character: "Саске" }
+        ]
       },
-      // Добавляй еще вопросы
+      {
+        question: "Что тебе ближе?",
+        options: [
+          { text: "Дружба", character: "Наруто" },
+          { text: "Любовь", character: "Сакура" },
+          { text: "Мудрость", character: "Какаши" },
+          { text: "Сила", character: "Саске" }
+        ]
+      }
     ];
 
-    const characters = [
-      "Наруто",
-      "Саске",
-      "Сакура",
-      "Какаши"
-    ];
-
-    let currentQuestionIndex = 0;
-    let scores = [0, 0, 0, 0];
-    const totalQuestions = questions.length;
+    let currentQuestion = 0;
+    const scores = {};
 
     function showQuestion() {
-      const q = questions[currentQuestionIndex];
-      content.innerHTML = `<h2>${q.question}</h2>`;
-      q.options.forEach((option, i) => {
-        const btn = document.createElement("button");
-        btn.textContent = option;
-        btn.onclick = () => {
-          scores[i]++;
-          currentQuestionIndex++;
-          if (currentQuestionIndex < totalQuestions) {
-            showQuestion();
-          } else {
-            showResult();
-          }
-        };
-        content.appendChild(btn);
-      });
+      const q = questions[currentQuestion];
+      quizContainer.innerHTML = `
+        <h3>${q.question}</h3>
+        ${q.options.map((opt, idx) => `<button onclick="selectOption('${opt.character}')">${opt.text}</button>`).join('')}
+      `;
+    }
+
+    window.selectOption = function(character) {
+      scores[character] = (scores[character] || 0) + 1;
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
     }
 
     function showResult() {
-      const maxScore = Math.max(...scores);
-      const maxIndex = scores.indexOf(maxScore);
-      const character = characters[maxIndex];
-
-      content.innerHTML = `
-        <h2>Ты — ${character}!</h2>
-        <p>Спасибо за прохождение теста.</p>
-        <button id="btn-back">Вернуться на главную</button>
+      const resultCharacter = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+      quizContainer.innerHTML = `
+        <h2>Ты — ${resultCharacter}!</h2>
+        <img src="images/${resultCharacter.toLowerCase()}.jpg" alt="${resultCharacter}">
+        <p>Спасибо за участие в тесте ✨</p>
+        <button onclick="Telegram.WebApp.close()">Закрыть</button>
       `;
-
-      document.getElementById("btn-back").onclick = () => {
-        window.location.href = "main.html";
-      };
     }
 
     showQuestion();
