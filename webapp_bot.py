@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # === ЗАМЕНИ НА СВОИ ДАННЫЕ ===
 BOT_TOKEN = '7625539703:AAF7nDtV5vndTY2pqREfTkqO4oTv7D13S1Q'  # токен от BotFather
-WEBAPP_URL = 'https://mini-apps-ebon.vercel.app/'  # URL твоего мини-приложения
+WEBAPP_URL = 'https://mini-apps-ebon.vercel.app/main.html'  # URL твоего мини-приложения
 
 # === ОБРАБОТЧИК КОМАНДЫ /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
