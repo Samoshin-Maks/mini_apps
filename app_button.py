@@ -14,7 +14,7 @@ async def cmd_start(message: Message):
         [
             InlineKeyboardButton(
                 text="Пройти тест",
-                web_app=WebAppInfo(url="https://mini-apps-ebon.vercel.app/")
+                web_app=WebAppInfo(url="https://mini-apps-ebon.vercel.app/main.html")
             )
         ]
     ])
