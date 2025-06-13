@@ -2,151 +2,204 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Кто ты из аниме?</title>
+  <title>Аниме Mini App с DataStorage</title>
   <style>
     body {
-      background-color: #121212;
+      background-color: black;
       color: white;
       font-family: Arial, sans-serif;
-      max-width: 400px;
-      margin: 0 auto;
       padding: 20px;
     }
     button {
-      width: 100%;
-      padding: 15px;
+      display: block;
       margin: 10px 0;
+      padding: 10px 20px;
       background: black;
-      border: 2px solid white;
       color: white;
-      font-size: 18px;
+      border: 2px solid white;
       cursor: pointer;
-      border-radius: 8px;
+      font-size: 16px;
     }
     button:hover {
       background: white;
       color: black;
     }
-    h1 {
-      text-align: center;
+    #back-btn {
+      display: none;
+      margin-bottom: 20px;
+    }
+    #score-display {
+      white-space: pre-line;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1 id="header">Привет!</h1>
-  <div id="question-container"></div>
-  <button id="next-btn" style="display:none;">Далее</button>
-  <button id="restart-btn" style="display:none;">Пройти заново</button>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <button id="back-btn">Назад</button>
+  <div id="main-screen"></div>
+  <div id="content"></div>
+
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    const tg = window.Telegram?.WebApp;
+    let quizScores = {};
 
-    const questions = [
-      {
-        text: "Какой жанр аниме тебе нравится больше всего?",
-        options: ["Экшен", "Романтика", "Фантастика", "Драма"]
-      },
-      {
-        text: "Какой тип героя тебе ближе?",
-        options: ["Сильный и решительный", "Добрый и заботливый", "Таинственный и загадочный", "Весёлый и дружелюбный"]
-      },
-      {
-        text: "Что ты ценишь в друзьях?",
-        options: ["Верность", "Веселье", "Разум", "Сила духа"]
+    // Загружаем баллы из DataStorage или localStorage
+    async function loadScores() {
+      if (tg && tg.getData && tg.setData) {
+        try {
+          const data = await tg.getData("animeQuizScores");
+          if (data) {
+            quizScores = JSON.parse(data);
+          }
+        } catch (e) {
+          console.error("Ошибка загрузки из Telegram DataStorage:", e);
+          loadScoresFromLocalStorage();
+        }
+      } else {
+        loadScoresFromLocalStorage();
       }
-    ];
+    }
 
-    const scoresMap = {
-      "Экшен": {"Edward": 2, "Midoriya": 1, "Light": 0, "Tokyo": 0},
-      "Романтика": {"Edward": 0, "Midoriya": 2, "Light": 1, "Tokyo": 0},
-      "Фантастика": {"Edward": 0, "Midoriya": 0, "Light": 2, "Tokyo": 1},
-      "Драма": {"Edward": 0, "Midoriya": 0, "Light": 1, "Tokyo": 2},
+    // Сохраняем баллы в DataStorage или localStorage
+    async function saveScores() {
+      if (tg && tg.getData && tg.setData) {
+        try {
+          await tg.setData("animeQuizScores", JSON.stringify(quizScores));
+        } catch (e) {
+          console.error("Ошибка сохранения в Telegram DataStorage:", e);
+          saveScoresToLocalStorage();
+        }
+      } else {
+        saveScoresToLocalStorage();
+      }
+    }
 
-      "Сильный и решительный": {"Edward": 2, "Midoriya": 1, "Light": 0, "Tokyo": 0},
-      "Добрый и заботливый": {"Edward": 0, "Midoriya": 2, "Light": 0, "Tokyo": 1},
-      "Таинственный и загадочный": {"Edward": 0, "Midoriya": 0, "Light": 2, "Tokyo": 1},
-      "Весёлый и дружелюбный": {"Edward": 1, "Midoriya": 1, "Light": 0, "Tokyo": 0},
+    function loadScoresFromLocalStorage() {
+      const data = localStorage.getItem("animeQuizScores");
+      if (data) {
+        quizScores = JSON.parse(data);
+      }
+    }
 
-      "Верность": {"Edward": 2, "Midoriya": 1, "Light": 0, "Tokyo": 1},
-      "Веселье": {"Edward": 0, "Midoriya": 2, "Light": 0, "Tokyo": 1},
-      "Разум": {"Edward": 0, "Midoriya": 0, "Light": 2, "Tokyo": 0},
-      "Сила духа": {"Edward": 1, "Midoriya": 0, "Light": 0, "Tokyo": 2}
+    function saveScoresToLocalStorage() {
+      localStorage.setItem("animeQuizScores", JSON.stringify(quizScores));
+    }
+
+    // Пример структуры квизов — сокращено для наглядности
+    const quizzes = {
+      "My Hero Academia": [
+        { question: "Кто главный герой?", options: ["Изуку", "Бакуго", "Тодороки", "Камина"], correct: 0 },
+        { question: "Сила Тодороки?", options: ["Огонь и лед", "Вода", "Ветер", "Земля"], correct: 0 },
+        // добавь ещё вопросы...
+      ],
+      "Naruto": [
+        { question: "Главный герой?", options: ["Наруто", "Саске", "Сакура", "Какаши"], correct: 0 },
+        // добавь вопросы...
+      ],
+      // Добавь ещё 3 аниме с 10 вопросами
     };
 
-    const results = {
-      "Edward": "Эдвард Элрик (Fullmetal Alchemist) — сильный и решительный герой.",
-      "Midoriya": "Мидория Изуку (My Hero Academia) — добрый и целеустремлённый.",
-      "Light": "Лайт Ягами (Death Note) — таинственный и умный.",
-      "Tokyo": "Токио (Tokyo Ghoul) — глубокий и сложный персонаж."
-    };
+    // DOM элементы
+    const mainScreen = document.getElementById("main-screen");
+    const content = document.getElementById("content");
+    const backBtn = document.getElementById("back-btn");
 
-    let currentQuestion = 0;
-    let scores = {"Edward": 0, "Midoriya": 0, "Light": 0, "Tokyo": 0};
+    let currentSection = null; // "quiz" или null
+    let currentQuiz = null;
+    let currentQuestionIndex = 0;
+    let correctAnswersCount = 0;
 
-    const header = document.getElementById('header');
-    const container = document.getElementById('question-container');
-    const nextBtn = document.getElementById('next-btn');
-    const restartBtn = document.getElementById('restart-btn');
+    function showMainScreen() {
+      currentSection = null;
+      currentQuiz = null;
+      currentQuestionIndex = 0;
+      correctAnswersCount = 0;
 
-    function showQuestion() {
-      container.innerHTML = "";
-      const q = questions[currentQuestion];
-      const questionEl = document.createElement('h2');
-      questionEl.textContent = q.text;
-      container.appendChild(questionEl);
+      backBtn.style.display = "none";
+      content.innerHTML = "";
 
-      q.options.forEach(option => {
-        const btn = document.createElement('button');
+      let scoreText = "Твои баллы по квизам:\n";
+      for (const anime in quizScores) {
+        scoreText += `${anime}: ${quizScores[anime]} баллов\n`;
+      }
+
+      mainScreen.innerHTML = `
+        <button id="btn-quizzes">Квизы по аниме</button>
+        <pre id="score-display">${scoreText}</pre>
+      `;
+
+      document.getElementById("btn-quizzes").onclick = () => {
+        showQuizList();
+      };
+    }
+
+    function showQuizList() {
+      currentSection = "quizList";
+      mainScreen.innerHTML = "";
+      content.innerHTML = "<h2>Выбери квиз по аниме:</h2>";
+      backBtn.style.display = "inline-block";
+
+      for (const anime in quizzes) {
+        const btn = document.createElement("button");
+        btn.textContent = anime;
+        btn.onclick = () => startQuiz(anime);
+        content.appendChild(btn);
+      }
+    }
+
+    function startQuiz(anime) {
+      currentSection = "quiz";
+      currentQuiz = anime;
+      currentQuestionIndex = 0;
+      correctAnswersCount = 0;
+      mainScreen.innerHTML = "";
+      backBtn.style.display = "inline-block";
+      showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+      const quiz = quizzes[currentQuiz];
+      const q = quiz[currentQuestionIndex];
+      content.innerHTML = `<h2>${q.question}</h2>`;
+      q.options.forEach((option, i) => {
+        const btn = document.createElement("button");
         btn.textContent = option;
         btn.onclick = () => {
-          // Считаем очки
-          const charsScores = scoresMap[option];
-          for (const char in charsScores) {
-            scores[char] += charsScores[char];
+          if (i === q.correct) correctAnswersCount++;
+          currentQuestionIndex++;
+          if (currentQuestionIndex < quiz.length) {
+            showQuizQuestion();
+          } else {
+            finishQuiz();
           }
-          nextBtn.style.display = "inline-block";
-          // Запоминаем выбранный вариант, чтобы нельзя было выбрать второй
-          [...container.querySelectorAll('button')].forEach(b => b.disabled = true);
-          btn.disabled = false;
         };
-        container.appendChild(btn);
+        content.appendChild(btn);
       });
-      nextBtn.style.display = "none";
     }
 
-    nextBtn.onclick = () => {
-      currentQuestion++;
-      if (currentQuestion < questions.length) {
-        showQuestion();
-      } else {
-        showResult();
-      }
-      nextBtn.style.display = "none";
-    };
+    async function finishQuiz() {
+      quizScores[currentQuiz] = (quizScores[currentQuiz] || 0) + correctAnswersCount;
+      await saveScores();
 
-    restartBtn.onclick = () => {
-      currentQuestion = 0;
-      scores = {"Edward": 0, "Midoriya": 0, "Light": 0, "Tokyo": 0};
-      header.textContent = "Привет!";
-      restartBtn.style.display = "none";
-      showQuestion();
-    };
-
-    function showResult() {
-      const maxChar = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-      header.textContent = "Привет, " + tg.initDataUnsafe.user?.first_name + "!";
-      container.innerHTML = `<h2>🎉 Твой персонаж:</h2><p>${results[maxChar]}</p>`;
-      nextBtn.style.display = "none";
-      restartBtn.style.display = "inline-block";
-      // Можно отправить результат боту, если нужно:
-      // tg.sendData(JSON.stringify({result: maxChar}));
+      content.innerHTML = `
+        <h2>Квиз завершён!</h2>
+        <p>Правильных ответов: ${correctAnswersCount} из ${quizzes[currentQuiz].length}</p>
+        <p>Всего баллов по ${currentQuiz}: ${quizScores[currentQuiz]}</p>
+      `;
+      backBtn.style.display = "inline-block";
     }
 
-    // Запускаем первый вопрос
-    showQuestion();
+    backBtn.onclick = () => {
+      showMainScreen();
+    };
+
+    // Загрузка и старт приложения
+    (async () => {
+      await loadScores();
+      showMainScreen();
+    })();
+
   </script>
 </body>
 </html>
