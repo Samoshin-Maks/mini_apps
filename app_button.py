@@ -1,30 +1,19 @@
-import requests
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.filters import Command
+import asyncio
 
-# === ЗАМЕНИ ЭТИ ДАННЫЕ НА СВОИ ===
-TOKEN = '7625539703:AAF7nDtV5vndTY2pqREfTkqO4oTv7D13S1Q'  # токен от BotFather
-CHAT_ID = '428172090'  # ID из @userinfobot
-WEBAPP_URL = 'https://mini-apps-ebon.vercel.app/'  # ссылка на твой мини-сайт
+API_TOKEN = 'YOUR_BOT_TOKEN'
 
-# === ТЕКСТ СООБЩЕНИЯ И КНОПКИ ===
-data = {
-    "chat_id": CHAT_ID,
-    "text": "Нажми кнопку, чтобы открыть мини-приложение:",
-    "reply_markup": {
-        "inline_keyboard": [[{
-            "text": "Открыть Mini App 🚀",
-            "web_app": {
-                "url": WEBAPP_URL
-            }
-        }]]
-    }
-}
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
 
-# === ОТПРАВКА СООБЩЕНИЯ ===
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-response = requests.post(url, json=data)
+@dp.message(Command("start"))
+async def cmd_start(message: Message):
+    await message.answer("Привет! Нажми кнопку, чтобы пройти тест.")
 
-# === ПЕЧАТЬ РЕЗУЛЬТАТА ===
-if response.ok:
-    print("Кнопка успешно отправлена ✅")
-else:
-    print("Ошибка ❌", response.text)
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(main())
