@@ -1,18 +1,69 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Мини-приложение</title>
+  <meta charset="UTF-8">
+  <title>Telegram Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body { text-align: center; padding-top: 50px; font-family: sans-serif; }
-    button { font-size: 20px; padding: 10px 20px; }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: Arial, sans-serif;
+      background-color: #000; /* черный фон */
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+      font-size: 26px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 15px auto;
+      padding: 15px;
+      font-size: 18px;
+      color: #fff;
+      background-color: #000;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #222;
+    }
   </style>
 </head>
 <body>
-  <h1>Привет из Telegram Mini App!</h1>
-  <button onclick="Telegram.WebApp.close()">Закрыть</button>
+
+  <h1 id="greeting">Привет, пользователь!</h1>
+
+  <button class="btn" onclick="onClick('earn_stars')">Заработать звезды</button>
+  <button class="btn" onclick="onClick('share_ref')">Поделиться реферальной ссылкой</button>
+  <button class="btn" onclick="onClick('faq')">FAQ</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Получаем данные пользователя
+    const user = tg.initDataUnsafe?.user;
+    if (user && user.first_name) {
+      document.getElementById("greeting").textContent = `Привет, ${user.first_name}!`;
+    }
+
+    // Обработка нажатий
+    function onClick(action) {
+      const payload = JSON.stringify({ action: action, time: new Date().toISOString() });
+      tg.sendData(payload); // Отправляем обратно в бота
+    }
+  </script>
+
 </body>
 </html>
