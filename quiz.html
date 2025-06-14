@@ -9,20 +9,25 @@
       color: white;
       font-family: Arial, sans-serif;
       padding: 20px;
+      text-align: center;
     }
     button {
       display: block;
-      margin: 10px 0;
+      margin: 10px auto;
       padding: 10px 20px;
-      background: black;
+      background: #1e1e1e;
       color: white;
       border: 2px solid white;
       cursor: pointer;
       font-size: 16px;
+      border-radius: 8px;
     }
     button:hover {
       background: white;
       color: black;
+    }
+    h2 {
+      color: #ffcc00;
     }
     #back-btn {
       margin-bottom: 20px;
@@ -32,34 +37,98 @@
 <body>
 
   <button id="back-btn">← Назад</button>
+  <div id="greeting"></div>
   <div id="content"></div>
 
   <script>
     const backBtn = document.getElementById("back-btn");
     const content = document.getElementById("content");
 
-    backBtn.onclick = () => {
-      window.location.href = "main.html";
-    };
+    backBtn.onclick = () => window.location.href = "main.html";
 
+    // Инициализация Telegram WebApp
+    let userName = "";
+    if (window.Telegram?.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+      const user = Telegram.WebApp.initDataUnsafe?.user;
+      if (user) {
+        userName = user.first_name;
+        document.getElementById("greeting").innerHTML = `<h2>Привет, ${userName}!</h2>`;
+      }
+    }
+
+    // Пример квизов (можно вынести в отдельный файл)
     const quizzes = {
       "My Hero Academia": [
-        { question: "Кто главный герой?", options: ["Изуку", "Бакуго", "Тодороки", "Камина"], correct: 0 },
-        { question: "Сила Тодороки?", options: ["Огонь и лед", "Вода", "Ветер", "Земля"], correct: 0 },
-        // Добавь остальные вопросы по желанию...
+        {
+          question: "Кто главный герой?",
+          options: ["Изуку", "Бакуго", "Тодороки", "Камина"],
+          correct: 0
+        },
+        {
+          question: "Сила Тодороки?",
+          options: ["Огонь и лед", "Вода", "Ветер", "Земля"],
+          correct: 0
+        }
       ],
       "Naruto": [
-        { question: "Главный герой?", options: ["Наруто", "Саске", "Сакура", "Какаши"], correct: 0 },
-        // Добавь остальные вопросы...
+        {
+          question: "Кто учитель команды 7?",
+          options: ["Ирука", "Какаши", "Джирайя", "Ямато"],
+          correct: 1
+        },
+        {
+          question: "Как зовут демона в Наруто?",
+          options: ["Шукая", "Кураму", "Мататаби", "Ичиби"],
+          correct: 1
+        }
       ],
-      // Добавь еще 3 аниме с вопросами
+      "Attack on Titan": [
+        {
+          question: "Кто главный герой?",
+          options: ["Армин", "Леви", "Эрен", "Жан"],
+          correct: 2
+        },
+        {
+          question: "Кем становится Эрен?",
+          options: ["Титаном", "Герой", "Командиром", "Шпионом"],
+          correct: 0
+        }
+      ],
+      "One Piece": [
+        {
+          question: "Как зовут капитана корабля?",
+          options: ["Зоро", "Луффи", "Санджи", "Брук"],
+          correct: 1
+        },
+        {
+          question: "Как называется фрукт Луффи?",
+          options: ["Мара Мара", "Гому Гому", "Хи Хи", "Суна Суна"],
+          correct: 1
+        }
+      ],
+      "Death Note": [
+        {
+          question: "Как зовут главного героя?",
+          options: ["Эл", "Кира", "Лайт", "Рюк"],
+          correct: 2
+        },
+        {
+          question: "Кто бог смерти?",
+          options: ["Рюк", "Л", "Рэм", "Сакура"],
+          correct: 0
+        }
+      ]
     };
 
+    // Переменные состояния
     let currentQuiz = null;
     let currentQuestionIndex = 0;
     let correctAnswersCount = 0;
     let quizScores = {};
 
+    // Загрузка и сохранение прогресса
     async function loadScores() {
       if (window.Telegram?.WebApp?.DataStorage) {
         try {
@@ -87,6 +156,7 @@
       }
     }
 
+    // Отображение списка квизов
     function showQuizList() {
       content.innerHTML = "<h2>Выбери квиз по аниме:</h2>";
       for (const anime in quizzes) {
@@ -97,6 +167,7 @@
       }
     }
 
+    // Начало квиза
     function startQuiz(anime) {
       currentQuiz = anime;
       currentQuestionIndex = 0;
@@ -104,6 +175,7 @@
       showQuizQuestion();
     }
 
+    // Отображение вопроса
     function showQuizQuestion() {
       const quiz = quizzes[currentQuiz];
       const q = quiz[currentQuestionIndex];
@@ -124,20 +196,19 @@
       });
     }
 
+    // Завершение квиза
     async function finishQuiz() {
       quizScores[currentQuiz] = (quizScores[currentQuiz] || 0) + correctAnswersCount;
       await saveScores();
 
       content.innerHTML = `
         <h2>Квиз завершён!</h2>
-        <p>Правильных ответов: ${correctAnswersCount} из ${quizzes[currentQuiz].length}</p>
-        <button id="btn-back">Вернуться к выбору квизов</button>
+        <p>Ты ответил(а) правильно на <span style="color:lightgreen">${correctAnswersCount}</span> из <span style="color:orange">${quizzes[currentQuiz].length}</span> вопросов.</p>
+        <button onclick="showQuizList()">← Вернуться к выбору квизов</button>
       `;
-      document.getElementById("btn-back").onclick = () => {
-        showQuizList();
-      };
     }
 
+    // Инициализация
     (async () => {
       quizScores = await loadScores();
       showQuizList();
