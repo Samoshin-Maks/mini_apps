@@ -11,9 +11,11 @@
       padding: 20px;
       text-align: center;
     }
+
     h2 {
       color: #ffcc00;
     }
+
     button {
       display: block;
       margin: 10px auto;
@@ -25,10 +27,12 @@
       font-size: 16px;
       border-radius: 8px;
     }
+
     button:hover {
       background: white;
       color: black;
     }
+
     img {
       max-width: 100%;
       margin-top: 20px;
@@ -54,11 +58,12 @@
     const quizContainer = document.getElementById("quiz-container");
 
     const characterImages = {
-     "Наруто": "naruto.jpg",
-     "Сакура": "sakura.jpg",
-     "Какаши": "kakashi.jpg",
-     "Саске": "saske.jpg"
-};
+      "Наруто": "naruto.jpg",
+      "Сакура": "sakura.jpg",
+      "Какаши": "kakashi.jpg",
+      "Саске": "saske.jpg"
+    };
+
     const questions = [
       {
         question: "Ты предпочитаешь...",
@@ -96,7 +101,9 @@
       const q = questions[currentQuestion];
       quizContainer.innerHTML = `
         <h3>${q.question}</h3>
-        ${q.options.map((opt, idx) => `<button onclick="selectOption('${opt.character}')">${opt.text}</button>`).join('')}
+        ${q.options.map(opt => `
+          <button onclick="selectOption('${opt.character}')">${opt.text}</button>
+        `).join('')}
       `;
     }
 
@@ -112,16 +119,24 @@
 
     function showResult() {
       const resultCharacter = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+      const imageFile = characterImages[resultCharacter] || "default.jpg";
+
       quizContainer.innerHTML = `
         <h2>Ты — ${resultCharacter}!</h2>
-        <img src="images/${resultCharacter.toLowerCase()}.jpg" alt="${resultCharacter}">
+        <img src="images/${imageFile}" alt="${resultCharacter}">
         <p>Спасибо за участие в тесте ✨</p>
-        <button onclick="Telegram.WebApp.close()">Закрыть</button>
+        <button onclick="goToMain()">На главную</button>
       `;
     }
 
+    function goToMain() {
+      window.location.href = "main.html";
+    }
+
+    // Стартуем тест
     showQuestion();
   </script>
 
 </body>
 </html>
+
